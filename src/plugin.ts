@@ -59,7 +59,7 @@ export async function createRouter(options: Options): Promise<express.Router> {
 function scheduleTask({ logger, scheduler, discovery, config }: Options) {
   return scheduler.scheduleTask({
     id: "dx-ingestion",
-    frequency: { seconds: 10 },
+    frequency: { minutes: 10 },
     timeout: { seconds: 30 },
     // A 3 second delay gives the backend server a chance to initialize before
     // any collators are executed, which may attempt requests against the API.
