@@ -1,5 +1,6 @@
 import { PluginEndpointDiscovery } from "@backstage/backend-common";
 import { Entity } from "@backstage/catalog-model";
+import { JsonObject } from "@backstage/types";
 import fetch from "node-fetch";
 
 import { chunk } from "./utils";
@@ -31,7 +32,7 @@ export async function ingest({ entities, discovery, config }: Options) {
 }
 
 // TODO: Include a version header so we know what type of body structure to expect?
-function post(path: string, body: Record<string, any>) {
+function post(path: string, body: JsonObject) {
   return fetch(path, {
     method: "POST",
     body: JSON.stringify(body),
