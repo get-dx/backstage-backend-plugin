@@ -53,7 +53,7 @@ export async function createRouter(options: Options): Promise<express.Router> {
     response.send({ status: "ok" });
   });
 
-  scheduleTask(options);
+  await scheduleTask(options);
 
   return router;
 }
