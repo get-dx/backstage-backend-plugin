@@ -38,6 +38,7 @@
     "@backstage/config": "^1.1.1",
     "@backstage/types": "^1.1.1",
     "@types/express": "*",
+    "@types/node-fetch": "^2.6.11",
     "express": "^4.17.1",
     "express-promise-router": "^4.1.0",
     "node-fetch": "2"
