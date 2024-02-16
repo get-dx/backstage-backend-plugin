@@ -18,18 +18,17 @@ yarn add @get-dx/backstage-backend-plugin
 # app-config.yaml
 proxy:
   endpoints:
-    '/dx':
+    "/dx":
       target: ${DX_API_HOST_URL}
       headers:
         Authorization: Bearer ${DX_API_TOKEN}
-
 ```
 
 3. Add a new plugin file at `packages/backend/src/plugins/dx.ts` —
 
 ```ts
-import { PluginEnvironment } from '../types';
-import { createRouter } from '@get-dx/backstage-backend-plugin';
+import { PluginEnvironment } from "../types";
+import { createRouter } from "@get-dx/backstage-backend-plugin";
 
 export default async function createPlugin(env: PluginEnvironment) {
   return await createRouter({
@@ -44,12 +43,35 @@ export default async function createPlugin(env: PluginEnvironment) {
 4. Update your backend startup to include the DX plugin —
 
 ```ts
-import dx from './plugins/dx';
+import dx from "./plugins/dx";
 // ...
-const dx = useHotMemoize(module, () => createEnv('dx'));
+const dx = useHotMemoize(module, () => createEnv("dx"));
 // ...
-apiRouter.use('/dx', await dx(dxEnv));
+apiRouter.use("/dx", await dx(dxEnv));
 ```
 
 5. Deploy your backend!
 
+## Configuration
+
+You may optionally pass a schedule for the task that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties).
+Only each key is optional —
+
+```ts
+return await createRouter({
+  ...env,
+  schedule: {
+    frequency: { minutes: 30 },
+    timeout: { seconds: 90 },
+  },
+});
+```
+
+The default schedule in [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties) format is —
+
+| Property       | Value             |
+| -------------- | ----------------- |
+| `frequency`    | `{ hours: 1 }`    |
+| `timeout`      | `{ seconds: 30 }` |
+| `initialDelay` | `{ seconds: 3 }`  |
+| `scope`        | `'global'`        |

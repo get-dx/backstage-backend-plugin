@@ -10,6 +10,7 @@ import { CatalogClient } from "@backstage/catalog-client";
 import { PluginEndpointDiscovery } from "@backstage/backend-common";
 import { Config } from "@backstage/config";
 import { ingest } from "./api";
+import { TaskScheduleDefinition } from "@backstage/backend-tasks";
 
 // TODO: Test with this new backend-plugin model
 export const dxBackendPlugin = createBackendPlugin({
@@ -41,6 +42,7 @@ export interface Options {
   scheduler: SchedulerService;
   discovery: PluginEndpointDiscovery;
   config: Config;
+  schedule?: Partial<TaskScheduleDefinition>;
 }
 
 export async function createRouter(options: Options): Promise<express.Router> {
@@ -56,14 +58,21 @@ export async function createRouter(options: Options): Promise<express.Router> {
   return router;
 }
 
-function scheduleTask({ logger, scheduler, discovery, config }: Options) {
+function scheduleTask({
+  logger,
+  scheduler,
+  discovery,
+  config,
+  schedule,
+}: Options) {
   return scheduler.scheduleTask({
     id: "dx-ingestion",
-    frequency: { minutes: 10 },
-    timeout: { seconds: 30 },
+    frequency: schedule?.frequency ?? { hours: 1 },
+    timeout: schedule?.timeout ?? { seconds: 30 },
     // A 3 second delay gives the backend server a chance to initialize before
     // any collators are executed, which may attempt requests against the API.
-    initialDelay: { seconds: 3 },
+    initialDelay: schedule?.initialDelay ?? { seconds: 3 },
+    scope: schedule?.scope ?? "global",
     fn: async () => {
       logger.info("Starting DX Catalog sync");
 
