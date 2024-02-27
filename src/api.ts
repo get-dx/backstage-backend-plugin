@@ -24,7 +24,7 @@ export async function ingest({ entities, discovery, config }: Options) {
   };
 
   for (const entityChunk of chunk(entities, CHUNK_SIZE)) {
-    await post(`${baseUrl}/api/backstageCatalog.ingest`, {
+    await post(`${baseUrl}/api/backstage.ingestCatalog`, {
       application,
       entities: entityChunk,
     });
