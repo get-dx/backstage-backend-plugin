@@ -1893,9 +1893,9 @@
     winston-transport "^4.5.0"
 
 "@backstage/backend-common@^0.20.1":
-  version "0.20.1"
-  resolved "https://registry.yarnpkg.com/@backstage/backend-common/-/backend-common-0.20.1.tgz#e9b8bc7d7251ea57b2db52d7c6619dd74caa959f"
-  integrity sha512-VI3b2Bio+ne/IgVhKh6wP+ogqBVV+vo8ck/n0RHwtukpRc0Gx92M+LPfqf4UxlV7fvY2tYSFXtXLXupeW8aWfQ==
+  version "0.20.2"
+  resolved "https://registry.yarnpkg.com/@backstage/backend-common/-/backend-common-0.20.2.tgz#0ce5b7bfcb91918008c4ec6bb6aede72c4474e20"
+  integrity sha512-hQazpWVhjcOIic1bDMVKZ2pQn9Th4gKmI+1Q5aT2cls7dnXNF7Mwb3bRgnVQk+18bEn6sxHOUyCAFd8KzYTtLg==
   dependencies:
     "@aws-sdk/abort-controller" "^3.347.0"
     "@aws-sdk/client-s3" "^3.350.0"
