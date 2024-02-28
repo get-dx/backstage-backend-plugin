@@ -75,3 +75,16 @@ The default schedule in [`TaskScheduleDefinition`](https://backstage.io/docs/ref
 | `timeout`      | `{ seconds: 30 }` |
 | `initialDelay` | `{ seconds: 3 }`  |
 | `scope`        | `'global'`        |
+
+### Service to Service Auth
+
+If you are using backstage [service to service auth](https://backstage.io/docs/auth/service-to-service-auth) you can pass a `tokenManager` to the plugin to authenticate requests from the plugin to your Catalog and Proxy API.
+
+```ts
+export default async function createPlugin(env: PluginEnvironment) {
+  return await createRouter({
+    ...
+    tokenManager: env.tokenManager,
+  });
+}
+```

@@ -1,4 +1,7 @@
-import { PluginEndpointDiscovery } from "@backstage/backend-common";
+import {
+  PluginEndpointDiscovery,
+  TokenManager,
+} from "@backstage/backend-common";
 import { Entity } from "@backstage/catalog-model";
 import { JsonObject } from "@backstage/types";
 import fetch from "node-fetch";
@@ -12,9 +15,15 @@ interface Options {
   entities: Entity[];
   discovery: PluginEndpointDiscovery;
   config: Config;
+  tokenManager?: TokenManager;
 }
 
-export async function ingest({ entities, discovery, config }: Options) {
+export async function ingest({
+  entities,
+  discovery,
+  config,
+  tokenManager,
+}: Options) {
   const baseUrl = await getBaseUrl(discovery);
 
   const application = {
@@ -24,15 +33,34 @@ export async function ingest({ entities, discovery, config }: Options) {
   };
 
   for (const entityChunk of chunk(entities, CHUNK_SIZE)) {
-    await post(`${baseUrl}/api/backstage.ingestCatalog`, {
-      application,
-      entities: entityChunk,
-    });
+    await post(
+      `${baseUrl}/api/backstage.ingestCatalog`,
+      {
+        application,
+        entities: entityChunk,
+      },
+      tokenManager,
+    );
   }
 }
 
 // TODO: Include a version header so we know what type of body structure to expect?
-function post(path: string, body: JsonObject) {
+async function post(
+  path: string,
+  body: JsonObject,
+  tokenManager?: TokenManager,
+) {
+  if (tokenManager) {
+    const token = await tokenManager.getToken();
+    return fetch(path, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.token}`,
+      },
+    });
+  }
   return fetch(path, {
     method: "POST",
     body: JSON.stringify(body),

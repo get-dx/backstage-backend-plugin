@@ -6,8 +6,14 @@ import {
   LoggerService,
   SchedulerService,
 } from "@backstage/backend-plugin-api";
-import { CatalogClient } from "@backstage/catalog-client";
-import { PluginEndpointDiscovery } from "@backstage/backend-common";
+import {
+  CatalogClient,
+  CatalogRequestOptions,
+} from "@backstage/catalog-client";
+import {
+  PluginEndpointDiscovery,
+  TokenManager,
+} from "@backstage/backend-common";
 import { Config } from "@backstage/config";
 import { ingest } from "./api";
 import { TaskScheduleDefinition } from "@backstage/backend-tasks";
@@ -43,6 +49,7 @@ export interface Options {
   discovery: PluginEndpointDiscovery;
   config: Config;
   schedule?: Partial<TaskScheduleDefinition>;
+  tokenManager?: TokenManager;
 }
 
 export async function createRouter(options: Options): Promise<express.Router> {
@@ -64,6 +71,7 @@ function scheduleTask({
   discovery,
   config,
   schedule,
+  tokenManager,
 }: Options) {
   return scheduler.scheduleTask({
     id: "dx-ingestion",
@@ -79,9 +87,16 @@ function scheduleTask({
       // TODO: Filter entities with extentionApi?
       const catalogApi = new CatalogClient({ discoveryApi: discovery });
 
-      const { items: entities } = await catalogApi.getEntities();
+      const opts: CatalogRequestOptions = {};
 
-      await ingest({ entities, discovery, config });
+      if (tokenManager) {
+        const token = await tokenManager.getToken();
+        opts.token = token.token;
+      }
+
+      const { items: entities } = await catalogApi.getEntities(undefined, opts);
+
+      await ingest({ entities, discovery, config, tokenManager });
       logger.info("Finished DX Catalog sync");
     },
   });
