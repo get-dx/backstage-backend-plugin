@@ -15,7 +15,7 @@ import {
   TokenManager,
 } from "@backstage/backend-common";
 import { Config } from "@backstage/config";
-import { ingest } from "./api";
+import { catalogSync } from "./api";
 import { TaskScheduleDefinition } from "@backstage/backend-tasks";
 
 // TODO: Test with this new backend-plugin model
@@ -29,6 +29,7 @@ export const dxBackendPlugin = createBackendPlugin({
         scheduler: coreServices.scheduler,
         discovery: coreServices.discovery,
         config: coreServices.rootConfig,
+        tokenManager: coreServices.tokenManager,
       },
       init({
         // Requested service instances get injected as per above
@@ -36,8 +37,15 @@ export const dxBackendPlugin = createBackendPlugin({
         scheduler,
         discovery,
         config,
+        tokenManager,
       }) {
-        return scheduleTask({ logger, scheduler, discovery, config });
+        return scheduleTask({
+          logger,
+          scheduler,
+          discovery,
+          config,
+          tokenManager,
+        });
       },
     });
   },
@@ -74,37 +82,50 @@ function scheduleTask({
   tokenManager,
 }: Options) {
   return scheduler.scheduleTask({
-    id: "dx-ingestion",
+    id: "dx-catalog-sync",
     frequency: schedule?.frequency ?? { hours: 1 },
-    timeout: schedule?.timeout ?? { seconds: 30 },
+    timeout: schedule?.timeout ?? { minutes: 2 },
     // A 3 second delay gives the backend server a chance to initialize before
     // any collators are executed, which may attempt requests against the API.
     initialDelay: schedule?.initialDelay ?? { seconds: 3 },
     scope: schedule?.scope ?? "global",
     fn: async () => {
-      const disable = config.getOptionalBoolean("dx.disableDataCollection");
+      const isDisabled = config.getOptionalBoolean("dx.disableCatalogSync");
 
-      if (disable) {
-        logger.info("DX Catalog sync is disabled");
+      if (isDisabled) {
+        logger.info("DX Catalog sync is disabled, skipping.");
         return;
       }
 
       logger.info("Starting DX Catalog sync");
 
-      // TODO: Filter entities with extentionApi?
       const catalogApi = new CatalogClient({ discoveryApi: discovery });
 
       const opts: CatalogRequestOptions = {};
 
-      if (tokenManager) {
-        const token = await tokenManager.getToken();
-        opts.token = token.token;
+      try {
+        if (tokenManager) {
+          const token = await tokenManager.getToken();
+          opts.token = token.token;
+        }
+
+        // TODO: Filter entities with extentionApi.
+        const { items: entities } = await catalogApi.getEntities(
+          undefined,
+          opts,
+        );
+
+        await catalogSync({ entities, discovery, config, tokenManager });
+      } catch (error) {
+        logger.error(`Error during DX Catalog sync: ${getErrorMessage(error)}`);
       }
 
-      const { items: entities } = await catalogApi.getEntities(undefined, opts);
-
-      await ingest({ entities, discovery, config, tokenManager });
       logger.info("Finished DX Catalog sync");
     },
   });
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error);
 }

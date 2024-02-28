@@ -18,7 +18,7 @@ interface Options {
   tokenManager?: TokenManager;
 }
 
-export async function ingest({
+export async function catalogSync({
   entities,
   discovery,
   config,
@@ -32,9 +32,17 @@ export async function ingest({
     baseUrl: config.getOptionalString("app.baseUrl"),
   };
 
+  // Notify DX of sync start
+  await post(
+    `${baseUrl}/api/backstage.catalogSyncStart`,
+    { application },
+    tokenManager,
+  );
+
+  // Chunk all entities
   for (const entityChunk of chunk(entities, CHUNK_SIZE)) {
     await post(
-      `${baseUrl}/api/backstage.ingestCatalog`,
+      `${baseUrl}/api/backstage.catalogSyncChunk`,
       {
         application,
         entities: entityChunk,
@@ -42,30 +50,47 @@ export async function ingest({
       tokenManager,
     );
   }
+
+  // Notify DX of sync complete
+  await post(
+    `${baseUrl}/api/backstage.catalogSyncComplete`,
+    { application },
+    tokenManager,
+  );
 }
 
-// TODO: Include a version header so we know what type of body structure to expect?
+// Future - Include a version header so we know what type of body structure to expect.
 async function post(
   path: string,
-  body: JsonObject,
+  reqBody: JsonObject,
   tokenManager?: TokenManager,
 ) {
+  const headers: HeadersInit = {};
+
   if (tokenManager) {
     const token = await tokenManager.getToken();
-    return fetch(path, {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token.token}`,
-      },
-    });
+    headers.Authorization = `Bearer ${token.token}`;
   }
-  return fetch(path, {
+
+  const res = await fetch(path, {
     method: "POST",
-    body: JSON.stringify(body),
-    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reqBody),
+    headers: { "Content-Type": "application/json", ...headers },
   });
+
+  const resBody = await res.json();
+
+  // DX specific error
+  if (resBody.ok === false) {
+    throw new Error(`Error communicating with DX: ${resBody.error}`);
+  }
+
+  // Other unknown error
+  if (!res.ok) {
+    throw new Error(`Error communicating with DX: ${JSON.stringify(resBody)}`);
+  }
+
+  return resBody;
 }
 
 async function getBaseUrl(discovery: PluginEndpointDiscovery) {

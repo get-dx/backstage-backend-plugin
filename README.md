@@ -54,6 +54,8 @@ apiRouter.use("/dx", await dx(dxEnv));
 
 ## Configuration
 
+### Schedule
+
 You may optionally pass a schedule for the task that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties).
 Only each key is optional —
 
@@ -69,12 +71,12 @@ return await createRouter({
 
 The default schedule in [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties) format is —
 
-| Property       | Value             |
-| -------------- | ----------------- |
-| `frequency`    | `{ hours: 1 }`    |
-| `timeout`      | `{ seconds: 30 }` |
-| `initialDelay` | `{ seconds: 3 }`  |
-| `scope`        | `'global'`        |
+| Property       | Value            |
+| -------------- | ---------------- |
+| `frequency`    | `{ hours: 1 }`   |
+| `timeout`      | `{ minutes: 2 }` |
+| `initialDelay` | `{ seconds: 3 }` |
+| `scope`        | `'global'`       |
 
 ### Service to Service Auth
 
@@ -87,4 +89,26 @@ export default async function createPlugin(env: PluginEnvironment) {
     tokenManager: env.tokenManager,
   });
 }
+```
+
+### Application Id
+
+Optionally set `appId` to distinguish multiple instances of backstage within DX. Can be any string as long as it's unique within your DX account.
+
+```yaml
+# app-config.yaml
+dx:
+  appId: staging
+```
+
+### Disable Catalog Sync
+
+Optionally set `disableCatalogSync` to disable running the software catalog sync scheduled task.
+
+This can be helpful for local development or when running multiple environments of backstage, such as dev, staging, prod.
+
+```yaml
+# app-config.yaml
+dx:
+  disableCatalogSync: true
 ```
