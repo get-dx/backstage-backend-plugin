@@ -74,6 +74,13 @@ function scheduleTask({
     initialDelay: schedule?.initialDelay ?? { seconds: 3 },
     scope: schedule?.scope ?? "global",
     fn: async () => {
+      const disable = config.getOptionalBoolean("dx.disableDataCollection");
+
+      if (disable) {
+        logger.info("DX Catalog sync is disabled");
+        return;
+      }
+
       logger.info("Starting DX Catalog sync");
 
       // TODO: Filter entities with extentionApi?

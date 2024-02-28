@@ -9,5 +9,12 @@ export interface Config {
      * @visibility frontend
      */
     appId?: string;
+    /**
+     * Optionally disable data collection.
+     * Useful to disable collection in development environments with configuration overrides.
+     *
+     * @visibility backend
+     */
+    disableDataCollection?: boolean;
   };
 }
