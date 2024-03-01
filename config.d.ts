@@ -10,11 +10,11 @@ export interface Config {
      */
     appId?: string;
     /**
-     * Optionally disable data collection.
+     * Optionally disable the catalog sync to DX.data collection.
      * Useful to disable collection in development environments with configuration overrides.
      *
      * @visibility backend
      */
-    disableDataCollection?: boolean;
+    disableCatalogSync?: boolean;
   };
 }
