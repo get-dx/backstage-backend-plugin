@@ -45,7 +45,7 @@ export default async function createPlugin(env: PluginEnvironment) {
 ```ts
 import dx from "./plugins/dx";
 // ...
-const dx = useHotMemoize(module, () => createEnv("dx"));
+const dxEnv = useHotMemoize(module, () => createEnv("dx"));
 // ...
 apiRouter.use("/dx", await dx(dxEnv));
 ```
