@@ -9,6 +9,7 @@ export interface Config {
      * @visibility frontend
      */
     appId?: string;
+
     /**
      * Optionally disable the catalog sync to DX.data collection.
      * Useful to disable collection in development environments with configuration overrides.
@@ -16,5 +17,17 @@ export interface Config {
      * @visibility backend
      */
     disableCatalogSync?: boolean;
+
+    /**
+     * Optional entity kind filter for syncing catalog entities to DX.
+     *
+     * By default, every catalog entity is synced to DX
+     * but this allows you to limit which kinds of entities are synced.
+     *
+     * E.g. ["Component", "API", "Template", "Location"]
+     *
+     * @visibility backend
+     */
+    catalogSyncAllowedKinds?: Array<string>;
   };
 }
