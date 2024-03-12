@@ -54,6 +54,16 @@ apiRouter.use("/dx", await dx(dxEnv));
 
 ## Configuration
 
+### Entity Filter
+
+Optionally set `catalogSyncAllowedKinds` to only send specific kinds of entities to DX.
+
+```yaml
+# app-config.yaml
+dx:
+  catalogSyncAllowedKinds: [API, Component, User, Group]
+```
+
 ### Schedule
 
 You may optionally pass a schedule for the task that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties).

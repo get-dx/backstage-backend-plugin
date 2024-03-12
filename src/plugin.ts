@@ -9,6 +9,7 @@ import {
 import {
   CatalogClient,
   CatalogRequestOptions,
+  EntityFilterQuery,
 } from "@backstage/catalog-client";
 import {
   PluginEndpointDiscovery,
@@ -109,9 +110,18 @@ function scheduleTask({
           opts.token = token.token;
         }
 
-        // TODO: Filter entities with extentionApi.
+        let filter: EntityFilterQuery = {};
+
+        const allowedKinds = config.getOptionalStringArray(
+          "dx.catalogSyncAllowedKinds",
+        );
+
+        if (allowedKinds) {
+          filter = { kind: allowedKinds };
+        }
+
         const { items: entities } = await catalogApi.getEntities(
-          undefined,
+          { filter },
           opts,
         );
 
