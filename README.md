@@ -1,7 +1,5 @@
 # DX Backstage Backend Plugin
 
-⚠️ BETA - This plugin is in a closed beta right now. Functionality and API of this plugin is certain to change. Please reach out to DX if you are interested! developers@getdx.com
-
 DX Backstage plugin to automatically sync your Backstage data to DX Data Cloud.
 
 ## Setup
