@@ -1,1 +1,1 @@
-export { dxBackendPlugin, createRouter } from "./plugin";
+export { dxBackendPlugin as default, createRouter } from "./plugin";
