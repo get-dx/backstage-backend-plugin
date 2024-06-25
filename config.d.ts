@@ -1,3 +1,5 @@
+import { TaskScheduleDefinition } from "@backstage/backend-tasks";
+
 export interface Config {
   /** Configuration options for the DX plugin */
   dx?: {
@@ -29,5 +31,13 @@ export interface Config {
      * @visibility backend
      */
     catalogSyncAllowedKinds?: Array<string>;
+
+    /**
+     * Optionally configure a schedule for the task
+     * that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties).
+     *
+     * @visibility backend
+     */
+    schedule?: Partial<TaskScheduleDefinition>;
   };
 }

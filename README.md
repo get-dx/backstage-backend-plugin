@@ -62,19 +62,35 @@ dx:
   catalogSyncAllowedKinds: [API, Component, User, Group]
 ```
 
+### New Backend System
+
+The DX backend plugin has support for the [new backend system](https://backstage.io/docs/backend-system/), here's how you can set that up:
+
+In your packages/backend/src/index.ts make the following changes:
+
+```diff
+  import { createBackend } from '@backstage/backend-defaults';
+
+  const backend = createBackend();
+
+  // ... other feature additions
+
++ backend.add(import('@get-dx/backstage-backend-plugin'));
+
+  backend.start();
+```
+
 ### Schedule
 
-You may optionally pass a schedule for the task that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties).
-Only each key is optional —
+You may optionally configure a schedule for the task that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties),
+only each key is optional —
 
-```ts
-return await createRouter({
-  ...env,
-  schedule: {
-    frequency: { minutes: 30 },
-    timeout: { seconds: 90 },
-  },
-});
+```yaml
+# app-config.yaml
+dx:
+  schedule:
+    frequency:
+      minutes: 45
 ```
 
 The default schedule in [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties) format is —

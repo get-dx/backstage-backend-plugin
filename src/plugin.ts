@@ -19,9 +19,8 @@ import { Config } from "@backstage/config";
 import { catalogSync } from "./api";
 import { TaskScheduleDefinition } from "@backstage/backend-tasks";
 
-// TODO: Test with this new backend-plugin model
 export const dxBackendPlugin = createBackendPlugin({
-  pluginId: "@get-dx/backstage-backend-plugin",
+  pluginId: "get-dx-backstage-backend-plugin",
   register(env) {
     env.registerInit({
       deps: {
@@ -31,22 +30,26 @@ export const dxBackendPlugin = createBackendPlugin({
         discovery: coreServices.discovery,
         config: coreServices.rootConfig,
         tokenManager: coreServices.tokenManager,
+        http: coreServices.httpRouter,
       },
-      init({
+      async init({
         // Requested service instances get injected as per above
         logger,
         scheduler,
         discovery,
         config,
         tokenManager,
+        http,
       }) {
-        return scheduleTask({
-          logger,
-          scheduler,
-          discovery,
-          config,
-          tokenManager,
-        });
+        http.use(
+          await createRouter({
+            logger,
+            scheduler,
+            discovery,
+            config,
+            tokenManager,
+          }),
+        );
       },
     });
   },
@@ -57,7 +60,6 @@ export interface Options {
   scheduler: SchedulerService;
   discovery: PluginEndpointDiscovery;
   config: Config;
-  schedule?: Partial<TaskScheduleDefinition>;
   tokenManager?: TokenManager;
 }
 
@@ -79,9 +81,10 @@ function scheduleTask({
   scheduler,
   discovery,
   config,
-  schedule,
   tokenManager,
 }: Options) {
+  const schedule = config.get("dx.schedule") as Partial<TaskScheduleDefinition>;
+
   return scheduler.scheduleTask({
     id: "dx-catalog-sync",
     frequency: schedule?.frequency ?? { hours: 1 },
