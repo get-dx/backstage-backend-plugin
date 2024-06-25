@@ -33,7 +33,7 @@ export interface Config {
     catalogSyncAllowedKinds?: Array<string>;
 
     /**
-     * Optional configure a schedule for the task
+     * Optionally configure a schedule for the task
      * that matches a [`TaskScheduleDefinition`](https://backstage.io/docs/reference/backend-tasks.taskscheduledefinition/#properties).
      *
      * @visibility backend
