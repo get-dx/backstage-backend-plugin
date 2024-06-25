@@ -83,7 +83,9 @@ function scheduleTask({
   config,
   tokenManager,
 }: Options) {
-  const schedule = config.get("dx.schedule") as Partial<TaskScheduleDefinition>;
+  const schedule = config.getOptional(
+    "dx.schedule",
+  ) as Partial<TaskScheduleDefinition>;
 
   return scheduler.scheduleTask({
     id: "dx-catalog-sync",
