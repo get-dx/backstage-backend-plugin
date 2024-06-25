@@ -85,8 +85,6 @@ function scheduleTask({
 }: Options) {
   const schedule = config.get("dx.schedule") as Partial<TaskScheduleDefinition>;
 
-  console.log("TACO", schedule);
-
   return scheduler.scheduleTask({
     id: "dx-catalog-sync",
     frequency: schedule?.frequency ?? { hours: 1 },
