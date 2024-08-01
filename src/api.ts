@@ -9,7 +9,7 @@ import fetch from "node-fetch";
 import { chunk } from "./utils";
 import { Config } from "@backstage/config";
 
-const CHUNK_SIZE = 1000;
+const CHUNK_SIZE = 100;
 
 interface Options {
   entities: Entity[];
