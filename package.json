@@ -14,7 +14,11 @@
     "types": "dist/index.d.ts"
   },
   "backstage": {
-    "role": "backend-plugin"
+    "pluginId": "@get-dx/backstage-backend-plugin",
+    "role": "backend-plugin",
+    "pluginPackages": [
+      "@get-dx/backstage-backend-plugin"
+    ]
   },
   "scripts": {
     "build": "backstage-cli package build",
