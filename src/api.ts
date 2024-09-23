@@ -1,7 +1,5 @@
-import {
-  PluginEndpointDiscovery,
-  TokenManager,
-} from "@backstage/backend-common";
+import { AuthService } from "@backstage/backend-plugin-api";
+import { PluginEndpointDiscovery } from "@backstage/backend-common";
 import { Entity } from "@backstage/catalog-model";
 import { JsonObject } from "@backstage/types";
 import fetch from "node-fetch";
@@ -15,14 +13,14 @@ interface Options {
   entities: Entity[];
   discovery: PluginEndpointDiscovery;
   config: Config;
-  tokenManager?: TokenManager;
+  auth?: AuthService;
 }
 
 export async function catalogSync({
   entities,
   discovery,
   config,
-  tokenManager,
+  auth,
 }: Options) {
   const baseUrl = await getBaseUrl(discovery);
 
@@ -36,7 +34,7 @@ export async function catalogSync({
   await post(
     `${baseUrl}/api/backstage.catalogSyncStart`,
     { application },
-    tokenManager,
+    auth,
   );
 
   // Chunk all entities
@@ -47,7 +45,7 @@ export async function catalogSync({
         application,
         entities: entityChunk,
       },
-      tokenManager,
+      auth,
     );
   }
 
@@ -55,21 +53,20 @@ export async function catalogSync({
   await post(
     `${baseUrl}/api/backstage.catalogSyncComplete`,
     { application },
-    tokenManager,
+    auth,
   );
 }
 
 // Future - Include a version header so we know what type of body structure to expect.
-async function post(
-  path: string,
-  reqBody: JsonObject,
-  tokenManager?: TokenManager,
-) {
+async function post(path: string, reqBody: JsonObject, auth?: AuthService) {
   const headers: HeadersInit = {};
 
-  if (tokenManager) {
-    const token = await tokenManager.getToken();
-    headers.Authorization = `Bearer ${token.token}`;
+  if (auth) {
+    const { token } = await auth.getPluginRequestToken({
+      onBehalfOf: await auth.getOwnServiceCredentials(),
+      targetPluginId: "proxy",
+    });
+    headers.Authorization = `Bearer ${token}`;
   }
 
   const res = await fetch(path, {

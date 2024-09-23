@@ -5,19 +5,17 @@ import {
   coreServices,
   LoggerService,
   SchedulerService,
+  AuthService,
+  SchedulerServiceTaskScheduleDefinition,
 } from "@backstage/backend-plugin-api";
 import {
   CatalogClient,
   CatalogRequestOptions,
   EntityFilterQuery,
 } from "@backstage/catalog-client";
-import {
-  PluginEndpointDiscovery,
-  TokenManager,
-} from "@backstage/backend-common";
+import { PluginEndpointDiscovery } from "@backstage/backend-common";
 import { Config } from "@backstage/config";
 import { catalogSync } from "./api";
-import { TaskScheduleDefinition } from "@backstage/backend-tasks";
 
 export const dxBackendPlugin = createBackendPlugin({
   pluginId: "get-dx-backstage-backend-plugin",
@@ -29,7 +27,7 @@ export const dxBackendPlugin = createBackendPlugin({
         scheduler: coreServices.scheduler,
         discovery: coreServices.discovery,
         config: coreServices.rootConfig,
-        tokenManager: coreServices.tokenManager,
+        auth: coreServices.auth,
         http: coreServices.httpRouter,
       },
       async init({
@@ -38,7 +36,7 @@ export const dxBackendPlugin = createBackendPlugin({
         scheduler,
         discovery,
         config,
-        tokenManager,
+        auth,
         http,
       }) {
         http.use(
@@ -47,7 +45,7 @@ export const dxBackendPlugin = createBackendPlugin({
             scheduler,
             discovery,
             config,
-            tokenManager,
+            auth,
           }),
         );
       },
@@ -55,14 +53,22 @@ export const dxBackendPlugin = createBackendPlugin({
   },
 });
 
+/*
+ * @public
+ * @deprecated Please migrate to the new backend system.
+ * */
 export interface Options {
   logger: LoggerService;
   scheduler: SchedulerService;
   discovery: PluginEndpointDiscovery;
   config: Config;
-  tokenManager?: TokenManager;
+  auth?: AuthService;
 }
 
+/*
+ * @public
+ * @deprecated Please migrate to the new backend system.
+ * */
 export async function createRouter(options: Options): Promise<express.Router> {
   const router = Router();
   router.use(express.json());
@@ -76,16 +82,10 @@ export async function createRouter(options: Options): Promise<express.Router> {
   return router;
 }
 
-function scheduleTask({
-  logger,
-  scheduler,
-  discovery,
-  config,
-  tokenManager,
-}: Options) {
+function scheduleTask({ logger, scheduler, discovery, config, auth }: Options) {
   const schedule = config.getOptional(
     "dx.schedule",
-  ) as Partial<TaskScheduleDefinition>;
+  ) as Partial<SchedulerServiceTaskScheduleDefinition>;
 
   return scheduler.scheduleTask({
     id: "dx-catalog-sync",
@@ -110,9 +110,12 @@ function scheduleTask({
       const opts: CatalogRequestOptions = {};
 
       try {
-        if (tokenManager) {
-          const token = await tokenManager.getToken();
-          opts.token = token.token;
+        if (auth) {
+          const { token } = await auth.getPluginRequestToken({
+            onBehalfOf: await auth.getOwnServiceCredentials(),
+            targetPluginId: "catalog",
+          });
+          opts.token = token;
         }
 
         let filter: EntityFilterQuery = {};
@@ -130,7 +133,7 @@ function scheduleTask({
           opts,
         );
 
-        await catalogSync({ entities, discovery, config, tokenManager });
+        await catalogSync({ entities, discovery, config, auth });
       } catch (error) {
         logger.error(`Error during DX Catalog sync: ${getErrorMessage(error)}`);
       }
